@@ -15,11 +15,14 @@ func writeTo(f file, data []byte) (err error) {
 	if _, err = f.Write(data); err != nil {
 		return err
 	}
-	defer f.Sync() // BUG: Sync error discarded
+	defer func() {
+		if serr := f.Sync(); err == nil {
+			err = serr
+		}
+	}()
 	return nil
 }
 
-// WriteFile writes data using os file; tests inject via writeTo.
 func WriteFile(path string, data []byte) error {
 	f, err := os.Create(path)
 	if err != nil {
